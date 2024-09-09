@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Homework Todo List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        .day {
+            background-color: white;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .task {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .task input[type="checkbox"] {
+            margin-right: 10px;
+            margin-top: 5px;
+        }
+        .completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+        button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .day-actions {
+            margin-top: 15px;
+        }
+        textarea {
+            width: 100%;
+            height: 60px;
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Weekly Homework Todo List</h1>
+    <h2>Week of 09/01/2024</h2>
+    <div id="todoList"></div>
+
+    <script>
+        const weeklyTasks = {
+            'Tuesday 09/03/2024': [
+                {'subject': 'Algebra 1 (H)', 'details': 'Agenda:\nDMR\nCompound Inequality Problem Solving\nCompound Inequality Additional Practice'},
+                {'subject': 'Geography 7', 'details': 'Different Types of Maps, GPS, Map Projections'},
+                {'subject': 'Life Science 7', 'details': 'Agenda: Continue classification of life notes. Discussed Archaebacteria, Eubacteria & protists (end at movement of protists)'},
+                {'subject': 'Spanish 2-NH2', 'details': 'En la clase: Berto Chapters 1 and 2'}
+            ],
+            'Wednesday 09/04/2024': [
+                {'subject': '7th Grade Entrepreneurial Leadership', 'details': 'Begin bringing in your "trash" items.'},
+                {'subject': 'Algebra 1 (H)', 'details': 'Agenda:\nDMR\nReview Cmpd. Inequalities Additional Practice\n1.4-1.6 Review(answer key in OneNote)'},
+                {'subject': 'Geography 7', 'details': 'Different Types of Maps, GPS, Map Projections'},
+                {'subject': 'Life Science 7', 'details': 'Agenda: Continue notes & discussions'},
+                {'subject': 'Spanish 2-NH2', 'details': 'En la clase: Berto Chapters 1 and 2'}
+            ],
+            'Thursday 09/05/2024': [
+                {'subject': 'Algebra 1 (H)', 'details': 'Agenda:\n1.4-1.6 Quiz\nAbsolute Value Equations'},
+                {'subject': 'Geography 7', 'details': 'Different Types of Maps, GPS, Map Projections'},
+                {'subject': 'Life Science 7', 'details': 'DROP'},
+                {'subject': 'Spanish 2-NH2', 'details': 'En la clase: Berto Chapters 1 and 2'}
+            ],
+            'Friday 09/06/2024': [
+                {'subject': 'Algebra 1 (H)', 'details': 'Agenda:\nWriting Absolute Value Equations\nReview Abs. Value Equations HW\nAbs. Value Inequalities'},
+                {'subject': 'English 7', 'details': 'HW: <strong>Prep for class discussion</strong> - brainstorm your answers to the "discussion questions" on your Lemon Brown annotation guide (you can write extra note on a Word doc, looseleaf paper, or in the extra room on your annotation guide) If you type on a word doc, please print before class.'},
+                {'subject': 'Geography 7', 'details': 'ERB'},
+                {'subject': 'Life Science 7', 'details': 'Agenda: Complete notes (plant & animal) . Start Kingdom brochure assignment in class.'},
+                {'subject': 'Spanish 2-NH2', 'details': 'En la clase: Berto Chapters 1 and 2'}
+            ]
+        };
+
+        function createTodoList() {
+            const todoList = document.getElementById("todoList");
+            
+            for (const [day, tasks] of Object.entries(weeklyTasks)) {
+                const dayDiv = document.createElement("div");
+                dayDiv.className = "day";
+                dayDiv.innerHTML = `<h2>${day}</h2>`;
+                
+                tasks.forEach(task => {
+                    const taskDiv = document.createElement("div");
+                    taskDiv.className = "task";
+                    const taskId = `${day}-${task.subject.replace(/\s+/g, '-')}`;
+                    taskDiv.innerHTML = `
+                        <input type="checkbox" id="${taskId}" name="${taskId}">
+                        <label for="${taskId}">
+                            <strong>${task.subject}</strong><br>
+                            ${task.details}
+                        </label>
+                    `;
+                    dayDiv.appendChild(taskDiv);
+                });
+
+                const dayActionsDiv = document.createElement("div");
+                dayActionsDiv.className = "day-actions";
+                dayActionsDiv.innerHTML = `
+                    <textarea id="${day}-notes" placeholder="Add your notes for ${day} here. If you didn't complete all assignments, please explain why."></textarea>
+                    <button onclick="sendDailyReport('${day}')">Send ${day}'s Report</button>
+                `;
+                dayDiv.appendChild(dayActionsDiv);
+                
+                todoList.appendChild(dayDiv);
+            }
+            loadSavedState();
+        }
+
+        function saveState() {
+            const state = {};
+            document.querySelectorAll('.task input[type="checkbox"], textarea').forEach(el => {
+                state[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+            });
+            localStorage.setItem('todoListState', JSON.stringify(state));
+        }
+
+        function loadSavedState() {
+            const savedState = JSON.parse(localStorage.getItem('todoListState')) || {};
+            Object.entries(savedState).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = value;
+                    } else if (element.tagName === 'TEXTAREA') {
+                        element.value = value;
+                    }
+                }
+            });
+        }
+
+        function sendDailyReport(day) {
+            const dayDiv = document.querySelector(`.day:has(h2:contains('${day}'))`);
+            const completedTasks = [];
+            const incompleteTasks = [];
+
+            dayDiv.querySelectorAll('.task').forEach(task => {
+                const checkbox = task.querySelector('input[type="checkbox"]');
+                const label = task.querySelector('label');
+                
+                if (checkbox.checked) {
+                    completedTasks.push(label.textContent.trim());
+                } else {
+                    incompleteTasks.push(label.textContent.trim());
+                }
+            });
+
+            const notes = document.getElementById(`${day}-notes`).value;
+
+            const report = {
+                day: day,
+                completedTasks: completedTasks,
+                incompleteTasks: incompleteTasks,
+                notes: notes
+            };
+
+            fetch('/send-report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(report),
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred while sending the report.');
+            });
+
+            saveState();
+        }
+
+        createTodoList();
+
+        // Add event listeners to save state when checkboxes or textareas change
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'checkbox' || e.target.tagName === 'TEXTAREA') {
+                saveState();
+            }
+        });
+    </script>
+</body>
+</html>
